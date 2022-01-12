@@ -1,11 +1,19 @@
 from os import close
 import pandas as pd
 import re
+import openpyxl 
 from difflib import get_close_matches
+from openpyxl.styles import PatternFill, Font
 
 opportunities = ['mitr', 'mitr', 'mirt', 'mitra', 'mithra', 'mithr', 'saathi', 'saathi', 'saatih', 'saahti', 'satahi', 'saathi', 'asathi', 'developer club', 'developers  club', 'developer club', 'developerclub', 'developer clbu', 'developer culb', 'developer lcub', 'developerc lub', 'develope rclub', 'developre club', 'develoepr club', 'develpoer club', 'deveolper club', 'devleoper club', 'deevloper club', 'dveeloper club', 'edveloper club', 'dev club', 'dev clbu', 'dev culb', 'dev lcub', 'devc lub', 'de vclub', 'dve club', 'edv club', 'editorial', 'editoria', 'editoril', 'edtorial', 'editoial', 'editrial', 'ediorial', 'edtorial', 'eitorial', 'ditorial', 'editorila', 'editorail', 'editoiral', 'editroial', 'ediotrial', 'edtiorial', 'eidtorial', 'deitorial', 'blog', 'blogg', 'bloog', 'bllog', 'bblog', 'blgo', 'bolg', 'lbog', 'gdsc', 'gdcs', 'gsdc', 'dgsc', 'regional', 'regiona', 'regionl', 'regioal', 'reginal', 'regonal', 'reional', 'rgional', 'egional', 'regionall', 'regionaal', 'regionnal', 'regioonal', 'regiional', 'reggional', 'reegional', 'rregional', 'regionla', 'regioanl', 'reginoal', 'regoinal', 'reigonal', 'rgeional', 'ergional', 'trv', 'trivikra', 'trivikrm', 'tivikram', 'triviram', 'trvikram', 'triikram', 'trvikram', 'tivikram', 'rivikram', 'trivikrma', 'trivikarm', 'trivirkam', 'trivkiram', 'triivkram', 'trviikram', 'tirvikram', 'rtivikram', 'tvr', 'rtv', 'ashwin', 'ashwi', 'ashwn', 'ashin', 'aswin', 'ahwin', 'shwin', 'ashwni', 'ashiwn', 'aswhin', 'ahswin', 'sahwin', 'ash', 'vue', 'veu', 'view', 'vvu', 'placement', 'placement', 'placemen', 'placemet', 'placment', 'placeent', 'placment', 'plaement', 'plcement', 'pacement', 'lacement', 'placemetn', 'placemnet', 'placeemnt', 'placmeent', 'plaecment', 'plcaement', 'palcement', 'lpacement', 'placements', 'ds', 'ds', 'bs', 'entrepreneurship', 'entrepeneurship', 'entrepreneur', 'entepreneur', 'entreprener', 'ntrepreneur', 'etrepreneur', 'ntrepreneur', 'entepreneur', 'entrereneur', 'ntrepreneur', 'entepreneur', 'enrepreneur', 'etrepreneur', 'ntrepreneur', 'entrepreneru', 'entreprenuer', 'entrepreenur', 'entreprneeur', 'entreperneur', 'entrerpeneur', 'entrpereneur', 'enterpreneur', 'enrtepreneur', 'etnrepreneur', 'netrepreneur', 'ecell', 'e-cell']
-
-
+font = Font(name='Calibri',size=11,bold=False,italic=False,
+                 vertAlign=None,
+                 underline='none',
+                 strike=False,
+                color='FF000000')
+fill = PatternFill(fill_type='solid',
+                 start_color='FFFFFFFF',
+                 end_color='FF0000FF')
 def mistypes(types):
     keywords = {"mitr":["mitr", "mirt", "mitra", "mithra", "mithr"], "saathi":["saathi","saatih", "saahti", "satahi", "saathi", "asathi"], "developer club":
 ["developers  club", "developer club", "developerclub", "developer clbu", "developer culb", "developer lcub", "developerc lub", "develope rclub", "developre club", "develoepr club", "develpoer club", "deveolper club", "devleoper club", "deevloper club", "dveeloper club", "edveloper club","dev club", "dev clbu", "dev culb", "dev lcub", "devc lub", "de vclub", "dve club", "edv club" ], "editorial":["editoria", "editoril", "edtorial", "editoial", "editrial", "ediorial", "edtorial", "eitorial", "ditorial", "editorila", "editorail", "editoiral", "editroial", "ediotrial", "edtiorial", "eidtorial", "deitorial"], "blog":["blogg", "bloog", "bllog", "bblog", "blgo", "bolg", "lbog"], "gdsc":["gdcs", "gsdc", "dgsc"], "regional":["regiona", "regionl", "regioal", "reginal", "regonal", "reional", "rgional", "egional", "regionall", "regionaal", "regionnal", "regioonal", "regiional", "reggional", "reegional", "rregional", "regionla", "regioanl", "reginoal", "regoinal", "reigonal", "rgeional", "ergional"], "trv":["trivikra", "trivikrm", "tivikram", "triviram", "trvikram", "triikram", "trvikram", "tivikram", "rivikram", "trivikrma", "trivikarm", "trivirkam", "trivkiram", "triivkram", "trviikram", "tirvikram", "rtivikram", "tvr", "rtv"], "ashwin":["ashwi", "ashwn", "ashin", "aswin", "ahwin", "shwin", "ashwni", "ashiwn", "aswhin", "ahswin", "sahwin", "ash"], "vue": ["veu", "view", "vvu"], "placement":["placement", "placemen", "placemet", "placment", "placeent", "placment", "plaement", "plcement", "pacement", "lacement", "placemetn", "placemnet", "placeemnt", "placmeent", "plaecment", "plcaement", "palcement", "lpacement", "placements"], "ds":["ds", "bs"], "entrepreneurship": ["entrepeneurship","entrepreneur","entepreneur", "entreprener", "ntrepreneur", "etrepreneur", "ntrepreneur", "entepreneur", "entrereneur", "ntrepreneur", "entepreneur", "enrepreneur", "etrepreneur", "ntrepreneur", "entrepreneru", "entreprenuer", "entrepreenur", "entreprneeur", "entreperneur", "entrerpeneur", "entrpereneur", "enterpreneur", "enrtepreneur", "etnrepreneur", "netrepreneur", "ecell","e-cell"]
@@ -82,9 +90,7 @@ def parse_file(filepath):
             if key == 'name':
                 name = match.group('name')
                 name = name.lower()
-                #print(name)
-
-            # extract email
+            # extract Email and Interests
             if key == 'keywords':
                 dataLine = match.group('keywords')
                 dataLine = dataLine.lower()
@@ -105,16 +111,27 @@ def parse_file(filepath):
 
         # create a pandas DataFrame from the list of dicts
         data = pd.DataFrame(data)
-        # set the name, email, and Student number as the index
         data.set_index(['Email'], inplace=True)
         # consolidate df to remove nans
         data = data.groupby(level=data.index.names).first()
-        # upemail Score from float to integer
         data = data.apply(pd.to_numeric, errors='ignore')
     return data
 if __name__ == '__main__':
     filepath = 'GSB_Meet.txt'
     data = parse_file(filepath)
-    data.to_csv("GSB_Data.csv",sep='\t')
-    print(data)
+    data.to_excel("GSB_Data.xlsx")
+    path = "GSB_Data.xlsx"
+    wb_obj = openpyxl.load_workbook(path)
+    sheet = wb_obj.active 
+    sheet.column_dimensions['A'].width = 50
+    sheet.column_dimensions['B'].width = 15
+    sheet.column_dimensions['C'].width = 15
+    sheet.column_dimensions['D'].width = 15
+    sheet.column_dimensions['E'].width = 15
+    sheet.column_dimensions['F'].width = 15
+    sheet.column_dimensions['G'].width = 15
+    sheet.column_dimensions['H'].width = 15
+    sheet.column_dimensions['I'].width = 15
+    sheet.column_dimensions['J'].width = 15
+    wb_obj.save('GSB_Excel.xlsx') 
     
